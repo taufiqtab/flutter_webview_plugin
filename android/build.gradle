@@ -34,7 +34,7 @@ allprojects {
 apply plugin: 'com.android.library'
 
 android {
-    compileSdkVersion 28
+    compileSdkVersion 31
     namespace 'com.flutter_webview_plugin'
 	
     defaultConfig {
