@@ -15,7 +15,7 @@ enum WebViewState { shouldStart, startLoad, finishLoad, abortLoad }
 // TODO: use an id by webview to be able to manage multiple webview
 
 /// Singleton class that communicate with a Webview Instance
-class FlutterWebviewPlugin {
+class FlutterWebviewPlugin implements FlutterPlugin, MethodCallHandler {
   factory FlutterWebviewPlugin() {
     if (_instance == null) {
       const MethodChannel methodChannel = const MethodChannel(_kChannel);
