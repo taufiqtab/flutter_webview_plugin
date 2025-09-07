@@ -20,11 +20,12 @@ import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
 import io.flutter.plugin.common.PluginRegistry;
+import io.flutter.embedding.engine.plugins.FlutterPlugin;
 
 /**
  * FlutterWebviewPlugin
  */
-public class FlutterWebviewPlugin implements MethodCallHandler, PluginRegistry.ActivityResultListener {
+public class FlutterWebviewPlugin implements FlutterPlugin, MethodCallHandler, PluginRegistry.ActivityResultListener {
     private Activity activity;
     private WebviewManager webViewManager;
     private Context context;
@@ -32,6 +33,22 @@ public class FlutterWebviewPlugin implements MethodCallHandler, PluginRegistry.A
     private static final String CHANNEL_NAME = "flutter_webview_plugin";
     private static final String JS_CHANNEL_NAMES_FIELD = "javascriptChannelNames";
 
+
+    @Override
+    public void onAttachedToEngine(@NonNull FlutterPluginBinding flutterPluginBinding) {
+        channel = new MethodChannel(flutterPluginBinding.getBinaryMessenger(), CHANNEL_NAME);
+        channel.setMethodCallHandler(this);
+    
+        // If activity is not available here, you'll assign it in the activity-aware API (optional)
+        this.context = flutterPluginBinding.getApplicationContext();
+    }
+    
+    @Override
+    public void onDetachedFromEngine(@NonNull FlutterPluginBinding binding) {
+        channel.setMethodCallHandler(null);
+        channel = null;
+    }
+    
     public static void registerWith(PluginRegistry.Registrar registrar) {
         if (registrar.activity() != null) {
             channel = new MethodChannel(registrar.messenger(), CHANNEL_NAME);
