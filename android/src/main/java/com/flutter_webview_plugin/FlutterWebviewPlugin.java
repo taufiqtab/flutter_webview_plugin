@@ -5,6 +5,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Point;
+import android.util.Log;
 import android.view.Display;
 import android.webkit.WebStorage;
 import android.widget.FrameLayout;
@@ -12,6 +13,7 @@ import android.webkit.CookieManager;
 import android.webkit.ValueCallback;
 import android.os.Build;
 
+import java.io.Console;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -21,11 +23,17 @@ import io.flutter.plugin.common.MethodChannel;
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
 import io.flutter.plugin.common.PluginRegistry;
 import io.flutter.embedding.engine.plugins.FlutterPlugin;
+import androidx.annotation.NonNull;
 
+import io.flutter.embedding.engine.plugins.FlutterPlugin;
+import io.flutter.embedding.engine.plugins.activity.ActivityAware;
+import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding;
+import io.flutter.plugin.common.MethodCall;
+import io.flutter.plugin.common.MethodChannel;
 /**
  * FlutterWebviewPlugin
  */
-public class FlutterWebviewPlugin implements FlutterPlugin, MethodCallHandler, PluginRegistry.ActivityResultListener {
+public class FlutterWebviewPlugin implements FlutterPlugin, MethodCallHandler, PluginRegistry.ActivityResultListener, ActivityAware {
     private Activity activity;
     private WebviewManager webViewManager;
     private Context context;
@@ -33,38 +41,56 @@ public class FlutterWebviewPlugin implements FlutterPlugin, MethodCallHandler, P
     private static final String CHANNEL_NAME = "flutter_webview_plugin";
     private static final String JS_CHANNEL_NAMES_FIELD = "javascriptChannelNames";
 
+//    public static void registerWith(PluginRegistry.Registrar registrar) {
+//        if (registrar.activity() != null) {
+//            channel = new MethodChannel(registrar.messenger(), CHANNEL_NAME);
+//            final FlutterWebviewPlugin instance = new FlutterWebviewPlugin(registrar.activity(), registrar.activeContext());
+//            registrar.addActivityResultListener(instance);
+//            channel.setMethodCallHandler(instance);
+//        }
+//    }
+
+    // No-arg constructor (mandatory for FlutterPlugin)
+    public FlutterWebviewPlugin() {}
 
     @Override
-    public void onAttachedToEngine(@NonNull FlutterPluginBinding flutterPluginBinding) {
-        channel = new MethodChannel(flutterPluginBinding.getBinaryMessenger(), CHANNEL_NAME);
+    public void onAttachedToEngine( FlutterPluginBinding binding) {
+        context = binding.getApplicationContext();
+        channel = new MethodChannel(binding.getBinaryMessenger(), "flutter_webview_plugin");
         channel.setMethodCallHandler(this);
-    
-        // If activity is not available here, you'll assign it in the activity-aware API (optional)
-        this.context = flutterPluginBinding.getApplicationContext();
     }
-    
+
     @Override
     public void onDetachedFromEngine(@NonNull FlutterPluginBinding binding) {
         channel.setMethodCallHandler(null);
         channel = null;
     }
-    
-    public static void registerWith(PluginRegistry.Registrar registrar) {
-        if (registrar.activity() != null) {
-            channel = new MethodChannel(registrar.messenger(), CHANNEL_NAME);
-            final FlutterWebviewPlugin instance = new FlutterWebviewPlugin(registrar.activity(), registrar.activeContext());
-            registrar.addActivityResultListener(instance);
-            channel.setMethodCallHandler(instance);
-        }
-    }
 
-    FlutterWebviewPlugin(Activity activity, Context context) {
-        this.activity = activity;
-        this.context = context;
+    // ActivityAware callbacks
+    @Override
+    public void onAttachedToActivity( ActivityPluginBinding binding) {
+        activity = binding.getActivity();
     }
 
     @Override
+    public void onDetachedFromActivityForConfigChanges() {
+        activity = null;
+    }
+
+    @Override
+    public void onReattachedToActivityForConfigChanges( ActivityPluginBinding binding) {
+        activity = binding.getActivity();
+    }
+
+    @Override
+    public void onDetachedFromActivity() {
+        activity = null;
+    }
+
+
+    @Override
     public void onMethodCall(MethodCall call, MethodChannel.Result result) {
+        Log.d("loging", "calling android: " + call.method);
         switch (call.method) {
             case "launch":
                 openUrl(call, result);
